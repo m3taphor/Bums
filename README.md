@@ -51,7 +51,7 @@
 
 [![Bums][product-screenshot]](https://i.ibb.co/v3YcwsS/image.png)
 
-An automated script or code made by [Python 3.10](https://www.python.org/downloads/release/python-3100/) designed for [@bums](https://t.me/bums/app?startapp=ref_3CcrQyaN) or [@bums_ton_bot](https://t.me/bums/app?startapp=ref_3CcrQyaN), built using the official Bums app APIs. It supports multiple sessions through [Pyrogram](https://github.com/pyrogram/pyrogram), with custom proxy support via an `accounts.json` configuration file.
+An automated script/code made by @m3taphor on [Python 3.10](https://www.python.org/downloads/release/python-3100/) for [@bums](https://t.me/bums/app?startapp=ref_3CcrQyaN) or [@bums_ton_bot](https://t.me/bums/app?startapp=ref_3CcrQyaN), built using Bums app APIs. It supports multiple sessions through [Pyrogram](https://github.com/pyrogram/pyrogram), with custom proxy support via an `accounts.json` configuration file.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
