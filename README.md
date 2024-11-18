@@ -143,7 +143,7 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 
 - Linux OS
   ```sh
-  python3 -v
+  python3 —version
   ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -163,7 +163,7 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
    ```
    - Run (Linux OS)
    ```sh
-   run.sh
+   ./run.sh
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
