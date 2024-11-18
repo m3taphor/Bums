@@ -275,7 +275,7 @@ Here’s an example of `accounts.json`:
 Distributed under the MIT License.
 The GNU General Public License is a free, copyleft license for software and other kinds of works.
 
-More Info on [LICENSE](https://github.com/m3taphor/Bums/blob/master/LICENSE) file.
+More Info on [LICENSE](https://github.com/m3taphor/Bums/blob/main/LICENSE) file.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
