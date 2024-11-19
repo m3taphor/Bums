@@ -90,7 +90,7 @@ class Tapper:
                     logger.info(f"{self.session_name} | Sleep {fls}s")
                     await asyncio.sleep(fls + 3)
             
-            ref_id = random.choice([settings.REF_KEY, "ref_3CcrQyaN"]) if settings.SUPPORT_AUTHOR else settings.REF_KEY
+            ref_id = random.choice([settings.REF_KEY, "ref_3CcrQyaN"]).removeprefix("ref_") if settings.SUPPORT_AUTHOR else settings.REF_KEY.removeprefix("ref_")
             
             web_view = await self.tg_client.invoke(functions.messages.RequestAppWebView(
                 peer=peer,
