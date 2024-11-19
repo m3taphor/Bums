@@ -575,7 +575,7 @@ class Tapper:
 
                             if task.get("type") == "open_link" and task_type == "nickname_check":
                                 if settings.AUTO_NAME_CHANGE:
-                                    await self.change_tg_name(name='📦')
+                                    await self.change_tg_name(name='📦 Bums')
                                     await asyncio.sleep(random.randint(5, 10))
                                     data_done = await self.done_task(http_client, auth_token=auth_token, task_id=task_id)
                                     if data_done:
