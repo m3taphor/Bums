@@ -89,15 +89,16 @@ class Tapper:
                     logger.warning(f"{self.session_name} | FloodWait {fl}")
                     logger.info(f"{self.session_name} | Sleep {fls}s")
                     await asyncio.sleep(fls + 3)
-            
-            ref_id = random.choice([settings.REF_KEY, "ref_3CcrQyaN"]).removeprefix("ref_") if settings.SUPPORT_AUTHOR else settings.REF_KEY.removeprefix("ref_")
+
+            ref_key = random.choice([settings.REF_KEY, "ref_3CcrQyaN"]) if settings.SUPPORT_AUTHOR else settings.REF_KEY
+            ref_id = ref_key.removeprefix("ref_")
             
             web_view = await self.tg_client.invoke(functions.messages.RequestAppWebView(
                 peer=peer,
                 app=types.InputBotAppShortName(bot_id=peer, short_name="app"),
                 platform='android',
                 write_allowed=True,
-                start_param=ref_id
+                start_param=ref_key
             ))
 
             auth_url = web_view.url
