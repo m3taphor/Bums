@@ -1,7 +1,6 @@
-version: '3'
 services:
   bot:
-    container_name: 'Bums - m3taphor'
+    container_name: 'Bums'
     build:
       context: .
     stop_signal: SIGINT
