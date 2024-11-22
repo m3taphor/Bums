@@ -1,5 +1,8 @@
 import json
-import hashlib
+try:
+    import hashlib
+except ImportError:
+    print("Error: hashlib is not installed. Install manually by 'pip intall hashlib'.")
 import random
 
 def card_details(card_id):
