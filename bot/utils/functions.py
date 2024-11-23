@@ -63,3 +63,24 @@ def task_answer(task_name, method):
         return None
     except json.JSONDecodeError:
         return None
+
+def combo_answer(method='get'):
+    try:
+        with open("./combo.json", "r", encoding='utf8') as file:
+            data = json.load(file)
+
+        if method == 'get':
+            if 'combo' in data and len(data['combo']) == 3:
+                return data['combo']
+            return None
+
+        elif method == 'wrong':
+            data["combo"] = []
+            
+            with open("./combo.json", "w", encoding='utf8') as file:
+                json.dump(data, file, indent=4)
+            return None
+    except FileNotFoundError:
+        return None
+    except json.JSONDecodeError:
+        return None

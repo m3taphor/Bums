@@ -1,0 +1,5 @@
+{
+    "How-To-Use": "Open 'card-list.json' find combo and put combination of 3 on 'combo' field (default - [111, 111, 111]).",
+    "Example": "[101, 206, 210] for 'Lunch (101), Learn Math (206), Play Bumcoin(210)'.",
+    "combo": [111, 111, 111]
+}

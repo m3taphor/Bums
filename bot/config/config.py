@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     AUTO_TASK: bool = True
     AUTO_JOIN_CHANNELS: bool = True
     AUTO_NAME_CHANGE: bool = True
+    
+    COLLECT_REFER_BALANCE: bool = True
+    
+    JOIN_GANG: bool = True
+    GANG_USERNAME: str = 'mainecode'
+    
+    SOLVE_COMBO: bool = True
 
     SLEEP_TIME: list[int] = [2700, 4200]
     START_DELAY: list[int] = [5, 100]

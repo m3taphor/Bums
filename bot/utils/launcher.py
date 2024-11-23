@@ -1,10 +1,8 @@
 import asyncio
 import argparse
 from random import randint
-from typing import Any
 from better_proxy import Proxy
 
-from bot.config import settings
 from bot.utils import logger
 from bot.core.tapper import run_tapper
 from bot.core.registrator import register_sessions, get_tg_client
@@ -13,12 +11,12 @@ from bot.utils.firstrun import load_session_names
 
 def print_banner():
     print('''
-    \033[38;5;135m╔▄▄▄╗╗▄_   ▄▄   ▄▄╗  ╔▄_   _▄╗  ,▄φφφφφ▄,
-    \033[38;5;135m║▓▓  ╞▓▓   ▓▓   ╫▓║  [▓▓┦ ┣▓▓|  |╫▓   ┣▓┦
-    \033[38;5;135m║▓█▄╗██╝   ╬▓   ╫▓╫  ╞▌▓╫_┣▓█╪  ╘╨▓║P_  ' 
-    \033[38;5;135m╫█▓▄ "▀▓▄  ╬╬  _ █╫  ╞▓▓ ╨ ▓▌║  _     ▀█' \033[37m- For education purpose
-    \033[38;5;135m╫██▓__▄██  '██▓▓█╫"  ╪▓█   ▌█_  ╫╪L   _█╫ \033[37m- Version: 1 (accounts.json edition)
-    \033[38;5;135m╘╘╘╘" ╘╘"   ╘"╘╘╘    '"╘   ╘╘╘   """""""  \033[37m- By [G.Hub]: \033[5m@m3taphor\033[38;5;135m
+    \033[38;5;128m╔▄▄▄╗╗▄_  ▄▄   ▄▄╗ ╔▄_   _▄╗ ,▄φφφφφ▄,\033[38;5;213m  ╔▄▄╥ \033[37m- (Bums!)
+    \033[38;5;128m║▓▓  ╞▓▓  ▓▓   ╫▓║ [▓▓┦ ┣▓▓| |╫▓   ┣▓┦\033[38;5;213m  [▓▓▌  
+    \033[38;5;128m║▓█▄╗██╝  ╬▓   ╫▓╫ ╞▌▓╫_┣▓█╪ ╘╨▓║P_  '\033[38;5;213m  ╘║║╛ 
+    \033[38;5;128m╫█▓▄ "▀▓▄ ╬╬  _ █╫ ╞▓▓ ╨ ▓▌║ _     ▀█'\033[38;5;213m   ▓▓  \033[37m- For education purpose
+    \033[38;5;128m╫██▓__▄██ '██▓▓█╫" ╪▓█   ▌█_ ╫╪L   _█╫\033[38;5;213m   ▀▀  \033[37m- Version: 1.5 (accounts.json edition)
+    \033[38;5;128m╘╘╘╘" ╘╘"  ╘"╘╘╘   '"╘   ╘╘╘  """"""" \033[38;5;213m   ╘╘  \033[37m- By [G.Hub]: \033[5m@m3taphor\033[38;5;128m
     \033[0m''')
 
     print('''                                             
@@ -31,7 +29,6 @@ def print_banner():
 
 def get_proxy(raw_proxy: str) -> Proxy:
     return Proxy.from_str(proxy=raw_proxy).as_url if raw_proxy else None
-
 
 async def process() -> None:
     parser = argparse.ArgumentParser()
@@ -59,7 +56,6 @@ async def process() -> None:
     elif action == 1:
         accounts = await Accounts().get_accounts()
         await run_tasks(accounts=accounts, used_session_names=used_session_names)
-
 
 async def run_tasks(accounts, used_session_names: str):
     tasks = []

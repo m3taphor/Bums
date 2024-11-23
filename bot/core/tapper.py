@@ -30,7 +30,7 @@ from .headers import headers
 
 from random import randint, choices
 
-from bot.utils.functions import card_details, tapHash, generate_taps, task_answer
+from bot.utils.functions import card_details, tapHash, generate_taps, task_answer, combo_answer
 
 from ..utils.firstrun import append_line_to_file
 
@@ -393,6 +393,73 @@ class Tapper:
         if response.get('code') == 0 and response.get('msg') == 'OK':
             return response
         return None
+    
+    @error_handler
+    async def get_refer_wallet(self, http_client: aiohttp.ClientSession, auth_token):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+
+        response = await self.make_request(http_client, 'GET', endpoint="/miniapps/api/wallet/balance", extra_headers=additional_headers)
+        if response.get('code') == 0 and response.get('msg') == 'OK':
+            return response
+        return None
+    
+    @error_handler
+    async def collect_refer_wallet(self, http_client: aiohttp.ClientSession, auth_token):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        web_boundary = {
+            "": "undefined"
+        }
+
+        response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/wallet/W70001To80001", extra_headers=additional_headers, web_boundary=web_boundary)
+        if response.get('code') == 0 and response.get('msg') == 'OK':
+            return response
+        return None
+    
+    @error_handler
+    async def get_gang_list(self, http_client: aiohttp.ClientSession, auth_token):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        web_boundary = {
+            "boostNum": 100,
+            "powerNum": 0
+        }
+
+        response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/gang/gang_lists", extra_headers=additional_headers, web_boundary=web_boundary)
+        if response.get('code') == 0 and response.get('msg') == 'OK':
+            return response
+        return None
+    
+    @error_handler
+    async def join_gang(self, http_client: aiohttp.ClientSession, auth_token):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        web_boundary = {
+            "name": settings.GANG_USERNAME
+        }
+
+        response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/gang/gang_join", extra_headers=additional_headers, web_boundary=web_boundary)
+        if response.get('code') == 0 and response.get('msg') == 'OK':
+            return response
+        return None
+    
+    @error_handler
+    async def combo_details(self, http_client: aiohttp.ClientSession, auth_token):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        
+        response = await self.make_request(http_client, 'GET', endpoint="/miniapps/api/mine_active/getMineAcctiveInfo", extra_headers=additional_headers)
+        if response.get('code') == 0 and response.get('msg') == 'OK' and int(response['data'].get('resultNum')) > 0:
+            return response
+        return None
+    
+    @error_handler
+    async def submit_combo(self, http_client: aiohttp.ClientSession, auth_token, one, two, three):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        web_boundary = {
+            "cardIdStr": f"{one},{two},{three}"
+        }
+
+        response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/mine_active/JoinMineAcctive", extra_headers=additional_headers, web_boundary=web_boundary)
+        if response.get('code') == 0 and response.get('msg') == 'OK':
+            return response
+        return None
 
     async def run(self, user_agent: str, proxy: str | None) -> None:
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
@@ -479,6 +546,38 @@ class Tapper:
                                 continue
                             
                     await asyncio.sleep(random.randint(1, 3))
+                    
+                    # Refer Collect
+                    if settings.COLLECT_REFER_BALANCE:
+                        refer_balance = await self.get_refer_wallet(http_client, auth_token=auth_token)
+                        if not refer_balance:
+                            logger.error(f"{self.session_name} | Unknown error while collecting Refer Data!")
+                            logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                            await asyncio.sleep(delay=sleep_time)
+                            break
+                        
+                        refer_wallet = refer_balance.get("data", {}).get("lists", [])
+                        for item in refer_wallet:
+                            if item['id'] == 70001:
+                                main_balance = int(item['availableAmount'])
+                                freeze_balance = int(item['freezeAmount'])
+
+                                if main_balance > 0 and main_balance - freeze_balance > 0:
+                                    logger.info(f"{self.session_name} | Refer Wallet Balance : <y>{main_balance}</y> | Freeze Refer Balance : <y>{freeze_balance}</y>")
+                                    logger.info(f"{self.session_name} | Collecting Refer Balance...")
+    
+                                    collect_refer = await self.collect_refer_wallet(http_client, auth_token=auth_token)
+                                    if not collect_refer:
+                                        logger.error(f"{self.session_name} | Unknown error while collecting Refer Balance!")
+                                        logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                                        await asyncio.sleep(delay=sleep_time)
+                                        break
+                                    
+                                    if collect_refer:
+                                        logger.success(f"{self.session_name} | Refer Balance Collected: <g>+{main_balance - freeze_balance}</g>")
+                            
+                        await asyncio.sleep(random.randint(1, 3))
+                    
                     # Auto Tap
                     if settings.AUTO_TAP:
                         tapData = await self.get_tap_info(http_client, auth_token=auth_token)
@@ -718,6 +817,66 @@ class Tapper:
                             
                         await asyncio.sleep(random.randint(1, 3))
                     
+                    # Join Gang
+                    if settings.JOIN_GANG:
+                        gang_list = await self.get_gang_list(http_client, auth_token=auth_token)
+                        if not gang_list:
+                            logger.error(f"{self.session_name} | Unknown error while collecting Gang-List!")
+                            logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                            await asyncio.sleep(delay=sleep_time)
+                            continue
+                        
+                        my_gang = gang_list['data']['myGang'].get('gangId') or None
+                        if my_gang is None:
+                            logger.success(f"{self.session_name} | Joining Gang...")
+                            
+                            join_gang = await self.join_gang(http_client, auth_token=auth_token)
+                            if not join_gang:
+                                logger.error(f"{self.session_name} | Unknown error while Joining Gang!")
+                                logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                                await asyncio.sleep(delay=sleep_time)
+                                continue
+                            logger.success(f"{self.session_name} | Gang joined successfully!")
+                            
+                        await asyncio.sleep(random.randint(1, 3))
+
+                    if settings.SOLVE_COMBO:
+                        user_data = await self.user_data(http_client, auth_token=auth_token)
+                        if not user_data:
+                            logger.error(f"{self.session_name} | Unknown error while collecting User Data!")
+                            logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                            await asyncio.sleep(delay=sleep_time)
+                            continue
+                        
+                        if "Lottery" in user_data["data"]["gameInfo"]["collegeCanUse"]:
+                            combo_available = await self.combo_details(http_client, auth_token=auth_token)
+                            if combo_available:
+                                reward = combo_available['data'].get('rewardNum')
+                                combo_data = combo_answer(method='get')
+                                if combo_data:
+                                    await asyncio.sleep(random.randint(1, 3))
+                                    logger.info(f"{self.session_name} | Checking Combo...")
+                                    solve_combo = await self.submit_combo(http_client, auth_token=auth_token, one=combo_data[0], two=combo_data[1], three=combo_data[2])
+                                    if not solve_combo:
+                                        logger.error(f"{self.session_name} | Unknown error while solving Combo!")
+                                        logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                                        await asyncio.sleep(delay=sleep_time)
+                                        continue
+                                    answer_status = solve_combo['data'].get('status')
+                                    if answer_status == 0:
+                                        logger.success(f"{self.session_name} | Combo solved: <g>+{reward}</g>")
+                                    else:
+                                        attempt_left = solve_combo['data'].get('resultNum')
+                                        combo_answer(method='wrong')
+                                        logger.error(f"{self.session_name} | Combo is wrong, Left Chance: <r>{attempt_left}</r>. Edit 'combo.json' with valid combo.")
+                                else:
+                                    logger.error(f"{self.session_name} | Skipping Combo, Combo is empty or invalid. Edit 'combo.json' with correct answers!")
+                        else:
+                            logger.error(f"{self.session_name} | Skipping Combo, Combo (Lottery) is currently locked!")
+                            
+
+                        await asyncio.sleep(random.randint(1, 3))
+                        
                     logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
                     await asyncio.sleep(delay=sleep_time)
 

@@ -12,7 +12,7 @@
     <img src="https://i.ibb.co/2K8gd43/Untitled-1-modified.png" alt="Bums Logo" width="100" height="100">
   </a>
 
-<h3 align="center">Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a></h3>
+<h3 align="center">Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a> 1.5</h3>
   <p align="center">
     Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a> Farming Script
     <br />
@@ -49,7 +49,7 @@
 
 ## About The Project
 
-[![Bums][product-screenshot]](https://i.ibb.co/v3YcwsS/image.png)
+[![Bums][product-screenshot]](https://i.ibb.co/g9dd3y9/image.png)
 
 An automated script/code made by @m3taphor on [Python 3.10](https://www.python.org/downloads/release/python-3100/) for [@bums](https://t.me/bums/app?startapp=ref_3CcrQyaN) or [@bums_ton_bot](https://t.me/bums/app?startapp=ref_3CcrQyaN), built using Bums app APIs. It supports multiple sessions through [Pyrogram](https://github.com/pyrogram/pyrogram), with custom proxy support via an `accounts.json` configuration file.
 
@@ -70,6 +70,9 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 - Auto Task
   - Join Channels
   - Change Name
+- Auto Collect Referred Balance
+- Auto Join Gang
+- Auto Solve Combo
 - Night-Mode Sleep
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -103,25 +106,29 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 | Settings                    |                                          Description (Usage)                                           |
 | --------------------------- | :----------------------------------------------------------------------------------------------------: |
 | **API_ID / API_HASH**       | API Keys of telegram. Use to manage accounts, tutorial: ([#obtain-telegram-api](#obtain-telegram-api)) |
-| **SUPPORT_AUTHOR**          |               Add random choice betweeb `REF_KEY` & AUTHOR `REF_KEY` (by default - True)               |
+| **SUPPORT_AUTHOR**          |                Add random choice between `REF_KEY` & AUTHOR `REF_KEY` (default - True)                 |
 | **REF_KEY**                 |                  Start with refer, ID which is after `startapp=` (eg. `ref_3CcrQyaN`)                  |
-| **NIGHT_MODE**              |                         Script will sleep on Night hours (by default - False)                          |
-| **NIGHT_TIME**              |            [Night Mode]: Hours of sleep on UTC Timezone [start, end] (by default - [0, 7])             |
-| **NIGHT_CHECKING**          |     [Night Mode]: Delay (in seconds) to check if night hours are over (by default - [3600, 7200])      |
-| **AUTO_UPGRADE_TAP_CARDS**  |                   Auto upgrade Tap Cards, increase profit faster (by default - True)                   |
-| **JACKPOT_LEVEL**           |           [Tap Card]: Maximum level for upgrading the _Jackpot level_ card (by default - 9)            |
-| **CRIT_LEVEL**              |          [Tap Card]: Maximum level for upgrading the _Crit Multiplier_ card (by default - 8)           |
-| **ENERGY_LEVEL**            |            [Tap Card]: Maximum level for upgrading the _Max Energy_ card (by default - 12)             |
-| **TAP_LEVEL**               |            [Tap Card]: Maximum level for upgrading the _Tap Reward_ card (by default - 12)             |
-| **ENERGY_REGEN_LEVEL**      |           [Tap Card]: Maximum level for upgrading the _Energy Regen_ card (by default - 10)            |
+| **NIGHT_MODE**              |                           Script will sleep on Night hours (default - False)                           |
+| **NIGHT_TIME**              |              [Night Mode]: Hours of sleep on UTC Timezone [start, end] (default - [0, 7])              |
+| **NIGHT_CHECKING**          |       [Night Mode]: Delay (in seconds) to check if night hours are over (default - [3600, 7200])       |
+| **AUTO_UPGRADE_TAP_CARDS**  |                    Auto upgrade Tap Cards, increase profit faster (default - True)                     |
+| **JACKPOT_LEVEL**           |             [Tap Card]: Maximum level for upgrading the _Jackpot level_ card (default - 9)             |
+| **CRIT_LEVEL**              |            [Tap Card]: Maximum level for upgrading the _Crit Multiplier_ card (default - 8)            |
+| **ENERGY_LEVEL**            |              [Tap Card]: Maximum level for upgrading the _Max Energy_ card (default - 12)              |
+| **TAP_LEVEL**               |              [Tap Card]: Maximum level for upgrading the _Tap Reward_ card (default - 12)              |
+| **ENERGY_REGEN_LEVEL**      |             [Tap Card]: Maximum level for upgrading the _Energy Regen_ card (default - 10)             |
 | **AUTO_UPGRADE_MINE_CARDS** |                   Auto upgrade Mine Cards, increase profit per hour (default - True)                   |
-| **MAX_CARD_PRICE_PURCHASE** |           [Mine Card]: Maximum amount of card purchase on _Mine_ cards (by default - 10000)            |
-| **AUTO_TAP**                |                           Auto Tap/Click to collect coin (by default - True)                           |
-| **TAPS_PER_BATCH**          |                      [Auto Tap]: How many taps per batch (by default - [15, 30])                       |
-| **DELAY_BETWEEN_TAPS**      |            [Auto Tap]: Delay (in seconds) between per batch of taps (by default - [10, 20])            |
+| **MAX_CARD_PRICE_PURCHASE** |             [Mine Card]: Maximum amount of card purchase on _Mine_ cards (default - 10000)             |
+| **AUTO_TAP**                |                            Auto Tap/Click to collect coin (default - True)                             |
+| **TAPS_PER_BATCH**          |                        [Auto Tap]: How many taps per batch (default - [15, 30])                        |
+| **DELAY_BETWEEN_TAPS**      |             [Auto Tap]: Delay (in seconds) between per batch of taps (default - [10, 20])              |
 | **AUTO_TASK**               |                                  Auto complete tasks (default - True)                                  |
 | **AUTO_JOIN_CHANNELS**      |                     Auto join telegram channels to complete task (default - True)                      |
-| **AUTO_NAME_CHANGE**        |                    Auto update name (add emoji) to complete task (default - False)                     |
+| **AUTO_NAME_CHANGE**        |                   Auto update name (on last name) to complete task (default - False)                   |
+| **COLLECT_REFER_BALANCE**   |                             Auto collect referred balance (default - True)                             |
+| **JOIN_GANG**               |                                Auto Join Gang (Squad) (default - True)                                 |
+| **GANG_USERNAME**           |                        [Join Gang]: Username of gang to join (eg. `mainecode`)                         |
+| **SOLVE_COMBO**             |            Solve daily combo (lottery) by proving answer on `combo.json` (default - False)             |
 | **SLEEP_TIME**              |           Sleep delay (in seconds) before restarting session again (default - [2700, 4200])            |
 | **START_DELAY**             |                        Delay (in seconds) to start process (default - [5, 100])                        |
 | **IN_USE_SESSIONS_PATH**    |       Path of text file for appending in-use session (default - 'bot/config/used_sessions.txt')        |
@@ -287,6 +294,6 @@ More Info on [LICENSE](https://github.com/m3taphor/Bums/blob/main/LICENSE) file.
 [license-url]: https://github.com/m3taphor/Bums/blob/main/LICENSE
 [telegram-shield]: https://img.shields.io/badge/Telegram-29a9eb?style=for-the-badge&logo=telegram&logoColor=white
 [telegram-url]: https://telegram.me/m3taphor
-[product-screenshot]: https://i.ibb.co/v3YcwsS/image.png
+[product-screenshot]: https://i.ibb.co/g9dd3y9/image.png
 [Python.com]: https://img.shields.io/badge/python%203.10-3670A0?style=for-the-badge&logo=python&logoColor=ffffff
 [Python-url]: https://www.python.org/downloads/release/python-3100/
