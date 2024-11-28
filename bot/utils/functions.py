@@ -85,5 +85,3 @@ def combo_answer(method='get'):
         return None
     except json.JSONDecodeError:
         return None
-
-def 
