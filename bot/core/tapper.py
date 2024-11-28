@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import json
+import shutil
 import os
 import random
 import re
@@ -18,14 +19,17 @@ import aiohttp
 from aiohttp_proxy import ProxyConnector
 from better_proxy import Proxy
 from pyrogram import Client
-from pyrogram.errors import Unauthorized, UserDeactivated, AuthKeyUnregistered, FloodWait
+from pyrogram.errors import (
+    Unauthorized, UserDeactivated, AuthKeyUnregistered, UserDeactivatedBan,
+    AuthKeyDuplicated, SessionExpired, SessionRevoked, FloodWait
+)
 from pyrogram.raw import types
 from pyrogram.raw import functions
 
 from bot.config import settings
 
 from bot.utils import logger
-from bot.exceptions import InvalidSession
+from bot.exceptions import TelegramInvalidSessionException, TelegramProxyError
 from .headers import headers
 
 from random import randint, choices
@@ -73,11 +77,7 @@ class Tapper:
 
         try:
             if not self.tg_client.is_connected:
-                try:
-                    await self.tg_client.connect()
-
-                except (Unauthorized, UserDeactivated, AuthKeyUnregistered):
-                    raise InvalidSession(self.session_name)
+                await self.tg_client.connect()
             
             while True:
                 try:
@@ -112,25 +112,34 @@ class Tapper:
 
             return ref_id, tg_web_data
 
-        except InvalidSession as error:
-            raise error
-
+        except (Unauthorized, UserDeactivated, AuthKeyUnregistered, UserDeactivatedBan, AuthKeyDuplicated,
+                SessionExpired, SessionRevoked):
+            raise TelegramInvalidSessionException(f"Telegram session is invalid. Client: {self.tg_client.name}")
+        except AttributeError as e:
+            raise TelegramProxyError(e)
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error during Authorization: {error}")
             await asyncio.sleep(delay=3)
-    
+            
+        finally:
+            if self.tg_client.is_connected:
+                await self.tg_client.disconnect()
+
     @error_handler  
     async def join_and_mute_tg_channel(self, link: str):
         await asyncio.sleep(delay=random.randint(15, 30))
         
         if not self.tg_client.is_connected:
             await self.tg_client.connect()
-
+    
         try:
+            # Parse the link
             parsed_link = link if 'https://t.me/+' in link else link[13:]
             
+            # Retrieve chat details
             chat = await self.tg_client.get_chat(parsed_link)
             
+            # Determine username or ID
             if chat.username:
                 chat_username = chat.username
             elif chat.id:
@@ -140,23 +149,36 @@ class Tapper:
                 return
             
             logger.info(f"{self.session_name} | Retrieved channel: <y>{chat_username}</y>")
+    
+            # Check if already a member
             try:
                 await self.tg_client.get_chat_member(chat_username, "me")
             except Exception as error:
-                if error.ID == 'USER_NOT_PARTICIPANT':
+                if getattr(error, "ID", None) == 'USER_NOT_PARTICIPANT':
+                    # Join the channel if not a member
                     await asyncio.sleep(delay=3)
                     chat = await self.tg_client.join_chat(parsed_link)
                     chat_id = chat.id
                     logger.info(f"{self.session_name} | Successfully joined chat <y>{chat_username}</y>")
+                    
+                    # Wait before muting
                     await asyncio.sleep(random.randint(5, 10))
-                    peer = await self.tg_client.resolve_peer(chat_id)
+                    
+                    # Resolve the peer
+                    if chat.is_channel or chat.is_group:
+                        peer = types.InputPeerChannel(channel_id=chat.id, access_hash=chat.access_hash)
+                    else:
+                        logger.error(f"{self.session_name} | Unsupported chat type for {chat_username or chat_id}")
+                        return
+                    
+                    # Mute the chat
                     await self.tg_client.invoke(functions.account.UpdateNotifySettings(
-                        peer=types.InputBotAppShortName(peer=peer),
+                        peer=peer,
                         settings=types.InputPeerNotifySettings(mute_until=2147483647)
                     ))
                     logger.info(f"{self.session_name} | Successfully muted chat <y>{chat_username}</y>")
                 else:
-                    logger.error(f"{self.session_name} | Error while checking channel: <y>{chat_username}</y>: {str(error.ID)}")
+                    logger.error(f"{self.session_name} | Error while checking channel: <y>{chat_username}</y>: {str(error)}")
         except Exception as e:
             logger.error(f"{self.session_name} | Error joining/muting channel {link}: {str(e)}")
             await asyncio.sleep(delay=3)    
@@ -164,7 +186,7 @@ class Tapper:
             if self.tg_client.is_connected:
                 await self.tg_client.disconnect()
             await asyncio.sleep(random.randint(10, 20))
-            
+        
     @error_handler
     async def change_tg_name(self, name: str):
         await asyncio.sleep(delay=random.randint(15, 30))
@@ -489,8 +511,14 @@ class Tapper:
                             continue
 
                     sleep_time = randint(settings.SLEEP_TIME[0], settings.SLEEP_TIME[1])
-
-                    ref_id, init_data = await self.get_tg_web_data(proxy=proxy)
+                    
+                    try:
+                        ref_id, init_data = await self.get_tg_web_data(proxy=proxy)
+                    except TelegramProxyError:
+                        return logger.error(f"<r>The selected proxy cannot be applied to the Telegram client.</r>")
+                    except Exception as e:
+                        return logger.error(f"Stop Tapper. Reason: {e}")
+            
                     logger.info(f"{self.session_name} | Trying to login")
                     
                     # Login
@@ -880,11 +908,16 @@ class Tapper:
                     logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
                     await asyncio.sleep(delay=sleep_time)
 
-                except InvalidSession as error:
-                    raise error
+                except Exception as error:
+                    logger.error(f"{self.session_name} | Unknown error: {error}")
+                    await asyncio.sleep(delay=3)
 
 async def run_tapper(tg_client: Client, user_agent: str, proxy: str | None, first_run: bool):
     try:
         await Tapper(tg_client=tg_client, first_run=first_run).run(user_agent=user_agent, proxy=proxy)
-    except InvalidSession:
-        logger.error(f"{tg_client.name} | Invalid Session")
+    except TelegramInvalidSessionException:
+        session_file = f"sessions/{tg_client.name}.session"
+        if not os.path.exists("sessions/deleted_sessions"):
+            os.makedirs("sessions/deleted_sessions", exist_ok=True)
+        shutil.move(session_file, f"sessions/deleted_sessions/{tg_client.name}.session")
+        logger.error(f"Telegram account {tg_client.name} is not work!")
