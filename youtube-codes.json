@@ -1,7 +1,8 @@
 {
     "incorrect_codes": [],
-    "codes": [{
-            "name": "Get YouTube hidden video code",
+    "codes": [
+        {
+            "name": "Find hidden code - watch Bums Show Episode 0",
             "code": "42858"
         },
         {
@@ -78,7 +79,7 @@
         },
         {
             "name": "Find hidden code - watch Bums Show Episode 19",
-            "code": "56510"
+            "code": "86100"
         },
         {
             "name": "Find hidden code - watch Bums Show Episode 20",
@@ -215,6 +216,14 @@
         {
             "name": "Find hidden code - watch Bums Show Episode 53",
             "code": "39617"
+        },
+        {
+            "name": "Find hidden code - watch Bums Show Episode 54",
+            "code": "15876"
+        },
+        {
+            "name": "Find hidden code - watch Bums Show Episode 55",
+            "code": "60465"
         }
     ]
 }
