@@ -276,7 +276,8 @@ class Tapper:
         additional_headers = {'Authorization': 'Bearer false'}
         web_boundary = {
             "invitationCode": ref_id,
-            "initData": init_data
+            "initData": init_data,
+            "act": "hhb"
         }
 
         response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/user/telegram_auth", extra_headers=additional_headers, web_boundary=web_boundary)

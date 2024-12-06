@@ -22,7 +22,6 @@ def card_details(card_id):
     
     
 def tapHash(taps_amount, collect_seq):
-    # const ee=
     secretData = str(taps_amount) + str(collect_seq) + "7be2a16a82054ee58398c5edb7ac4a5a"
     
     hashCode = hashlib.md5(secretData.encode('utf-8')).hexdigest()

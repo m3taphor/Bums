@@ -1,7 +1,6 @@
 {
     "incorrect_codes": [],
-    "codes": [
-        {
+    "codes": [{
             "name": "Find hidden code - watch Bums Show Episode 0",
             "code": "42858"
         },
@@ -224,6 +223,14 @@
         {
             "name": "Find hidden code - watch Bums Show Episode 55",
             "code": "60465"
+        },
+        {
+            "name": "Find hidden code - watch Bums Show Episode 56",
+            "code": "68600"
+        },
+        {
+            "name": "Find hidden code - watch Bums Show Episode 57",
+            "code": "27171"
         }
     ]
 }
