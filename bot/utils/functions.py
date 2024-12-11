@@ -84,3 +84,8 @@ def combo_answer(method='get'):
         return None
     except json.JSONDecodeError:
         return None
+
+
+def count_spin(value):
+    valid_values = [1, 2, 3, 5, 10, 50]
+    return max([v for v in valid_values if v <= value], default=0)

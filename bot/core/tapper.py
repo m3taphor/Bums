@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 import base64
 import json
 import shutil
@@ -34,7 +35,7 @@ from .headers import headers
 
 from random import randint, choices
 
-from bot.utils.functions import card_details, tapHash, generate_taps, task_answer, combo_answer
+from bot.utils.functions import card_details, tapHash, generate_taps, task_answer, combo_answer, count_spin
 
 from ..utils.firstrun import append_line_to_file
 
@@ -266,6 +267,16 @@ class Tapper:
         try:
             response = await http_client.request(method, full_url, headers=request_headers, **kwargs)
             response.raise_for_status()
+            
+            response_text = await response.text()
+            
+            # with open("log.txt", "a") as log_file:
+            #     log_file.write(f"- URL : {full_url}\n")
+            #     if method =='POST':
+            #         log_file.write(f"- Post Data : {kwargs.get('data', None)}\n\n")
+            #     log_file.write(f"- Response {response.status} : {response_text}\n")
+            #     log_file.write(f"\n=======================================================\n")
+                
             return await response.json()
         except (aiohttp.ClientResponseError, aiohttp.ClientError, Exception) as error:
             logger.error(f"{self.session_name} | Unknown error when processing request: {error}")
@@ -482,6 +493,48 @@ class Tapper:
         if response.get('code') == 0 and response.get('msg') == 'OK':
             return response
         return None
+    
+    @error_handler
+    async def box_info(self, http_client: aiohttp.ClientSession, auth_token):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        
+        response = await self.make_request(http_client, 'GET', endpoint="/miniapps/api/prop_shop/Lists?showPages=spin&page=1&pageSize=10", extra_headers=additional_headers)
+        if response.get('code') == 0 and response.get('msg') == 'OK':
+            return response
+        return None
+    
+    @error_handler
+    async def open_box(self, http_client: aiohttp.ClientSession, auth_token, count, prop_id):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        web_boundary = {
+            "count": count,
+            "propId": prop_id
+        }
+
+        response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/game_spin/Start", extra_headers=additional_headers, web_boundary=web_boundary)
+        if response.get('rewardLists'):
+            return response
+        return None
+    
+    @error_handler
+    async def spin_info(self, http_client: aiohttp.ClientSession, auth_token):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        
+        response = await self.make_request(http_client, 'GET', endpoint="/miniapps/api/game_slot/stamina", extra_headers=additional_headers)
+        if response.get('code') == 0 and response.get('msg') == 'OK':
+            return response
+        return None
+    
+    @error_handler
+    async def start_spin(self, http_client: aiohttp.ClientSession, auth_token, count):
+        additional_headers = {'Authorization': 'Bearer ' + auth_token}
+        web_boundary = {
+            "count": count
+        }
+        response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/game_slot/start", extra_headers=additional_headers, web_boundary=web_boundary)
+        if response.get('code') == 0 and response.get('msg') == 'OK':
+            return response
+        return None
 
     async def run(self, user_agent: str, proxy: str | None) -> None:
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
@@ -552,28 +605,30 @@ class Tapper:
                         logger.success(f"{self.session_name} | Collected Offline Bonus: <g>+{offline_bonus}</g>")
                         
                     await asyncio.sleep(random.randint(1, 3))
+                    
                     # Sign-In (Check-In)
-                    signin_data = await self.sign_in_data(http_client, auth_token=auth_token)
-                    if not signin_data:
-                        logger.error(f"{self.session_name} | Unknown error while collecting Check-In Data!")
-                        logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
-                        await asyncio.sleep(delay=sleep_time)
-                        break
-                    
-                    lists = signin_data['data']['lists']
-                    sign_status = signin_data['data']['signStatus']
-                    
-                    if sign_status == 0:
-                        for item in lists:
-                            if item["status"] == 0:
-                                day_reward = item["normal"]
-                                current_day = item["daysDesc"]
-                                make_signin = await self.sign_in(http_client, auth_token=auth_token)
-                                if make_signin:
-                                    logger.success(f"{self.session_name} | Successful Sign-In <y>{current_day}</y>: <g>+{day_reward}</g>")
-                                continue
-                            
-                    await asyncio.sleep(random.randint(1, 3))
+                    if settings.AUTO_SIGN_IN:
+                        signin_data = await self.sign_in_data(http_client, auth_token=auth_token)
+                        if not signin_data:
+                            logger.error(f"{self.session_name} | Unknown error while collecting Check-In Data!")
+                            logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                            await asyncio.sleep(delay=sleep_time)
+                            break
+                        
+                        lists = signin_data['data']['lists']
+                        sign_status = signin_data['data']['signStatus']
+
+                        if sign_status == 0:
+                            for item in lists:
+                                if item["status"] == 0:
+                                    day_reward = item["normal"]
+                                    current_day = item["daysDesc"]
+                                    make_signin = await self.sign_in(http_client, auth_token=auth_token)
+                                    if make_signin:
+                                        logger.success(f"{self.session_name} | Successful Sign-In <y>{current_day}</y>: <g>+{day_reward}</g>")
+                                    continue
+                                
+                        await asyncio.sleep(random.randint(1, 3))
                     
                     # Refer Collect
                     if settings.COLLECT_REFER_BALANCE:
@@ -606,6 +661,33 @@ class Tapper:
                             
                         await asyncio.sleep(random.randint(1, 3))
                     
+                    # Auto Open Free Box
+                    if settings.AUTO_OPEN_FREE_BOX:
+                        box_info = await self.box_info(http_client, auth_token=auth_token)
+                        if not box_info:
+                            logger.error(f"{self.session_name} | Unknown error while collecting Box Info!")
+                            logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                            await asyncio.sleep(delay=sleep_time)
+                            break
+                        
+                        box_list = box_info.get("data", {})
+                        for box in box_list:
+                            if box.get("propId") == 500010001:
+                                usage = box.get("toDayUse")
+                                max_use = int(box.get("toDayMaxUseNum"))
+                                today_use = int(box.get("toDayNowUseNum"))
+                                if usage == False and today_use < max_use:
+                                    open_box = await self.open_box(http_client, auth_token=auth_token, count=1, prop_id=500010001)
+                                    if not open_box:
+                                        logger.error(f"{self.session_name} | Unknown error while Opening Box!")
+                                        logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                                        await asyncio.sleep(delay=sleep_time)
+                                        continue
+                                    fb_name = open_box['rewardLists'][0].get('name')
+                                    logger.success(f"{self.session_name} | Free Box Opened: <y>500010001</y> | Prize: <g>{fb_name}</g>")
+                                    
+                        await asyncio.sleep(random.randint(1, 3))
+                        
                     # Auto Tap
                     if settings.AUTO_TAP:
                         tapData = await self.get_tap_info(http_client, auth_token=auth_token)
@@ -644,7 +726,7 @@ class Tapper:
                                     energy_left = tapData['leftEnergy']
                                     today_tap_done = tapData['todayCoin']
                                     collect_seq = tapData['collectSeqNo']
-                                    logger.success(f"{self.session_name} | Successfully Tapped <y>x{total_taps}</y>: <g>+{taps_amount}</g> | Updated Balance: <y>{post_taps['data'].get('coin')}</y> | Updated Energy: <y>({energy_left}/{total_energy})</y>")
+                                    logger.success(f"{self.session_name} | Tapped <y>x{total_taps}</y>: <g>+{taps_amount}</g> | Balance: <y>{post_taps['data'].get('coin')}</y> | Energy: <y>({energy_left}/{total_energy})</y>")
                                     await asyncio.sleep(random.randint(settings.DELAY_BETWEEN_TAPS[0], settings.DELAY_BETWEEN_TAPS[1]))
                                 else:
                                     logger.error(f"{self.session_name} | Unknown error while tapping, Skipping taps!")
@@ -868,6 +950,7 @@ class Tapper:
                             
                         await asyncio.sleep(random.randint(1, 3))
 
+                    # Auto Solve Combos
                     if settings.SOLVE_COMBO:
                         user_data = await self.user_data(http_client, auth_token=auth_token)
                         if not user_data:
@@ -905,11 +988,54 @@ class Tapper:
 
                         await asyncio.sleep(random.randint(1, 3))
                         
+                    # Auto Spins
+                    if settings.AUTO_SPINS:
+                        spin_info = await self.spin_info(http_client, auth_token=auth_token)
+                        if not spin_info:
+                            logger.error(f"{self.session_name} | Unknown error while collecting Spin Info!")
+                            logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                            await asyncio.sleep(delay=sleep_time)
+                            continue
+                        
+                        spin_count = settings.SPIN_COUNT
+                        total_spins = int(spin_info.get('data', {}).get('staminaNow')) or 0
+                        max_spins = spin_info.get('data', {}).get('staminaMax') or 'NaN'
+                        
+                        logger.info(f"{self.session_name} | Total Spins: <y>({total_spins}/{max_spins})</y>, Spinning...")
+                        
+                        while total_spins > 0:
+                            if spin_count > total_spins:
+                                spin_count = count_spin(total_spins)
+                                
+                            spin_data = await self.start_spin(http_client, auth_token=auth_token, count=spin_count)
+                            if not spin_data:
+                                logger.error(f"{self.session_name} | Unknown error while collecting Spin Data!")
+                                logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                                await asyncio.sleep(delay=sleep_time)
+                                continue
+                            
+                            spin_reward = (spin_data.get('data', {}).get('rewardLists', {}).get('rewardList', [{}])[0].get('name') or 'None')
+                            
+                            logger.success(f"{self.session_name} | Spin Reward: <g>{spin_reward}</g>")
+                            
+                            spin_info = await self.spin_info(http_client, auth_token=auth_token)
+                            if not spin_info:
+                                logger.error(f"{self.session_name} | Unknown error while collecting Spin Info!")
+                                logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                                await asyncio.sleep(delay=sleep_time)
+                                continue
+                            
+                            total_spins = int(spin_info.get('data', {}).get('staminaNow')) or 0
+                            await asyncio.sleep(random.randint(2, 8))
+                        
+                        await asyncio.sleep(random.randint(1, 3))
+                        
                     logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
                     await asyncio.sleep(delay=sleep_time)
 
                 except Exception as error:
                     logger.error(f"{self.session_name} | Unknown error: {error}")
+                    traceback.print_exc()
                     await asyncio.sleep(delay=3)
 
 async def run_tapper(tg_client: Client, user_agent: str, proxy: str | None, first_run: bool):

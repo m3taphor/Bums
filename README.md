@@ -12,7 +12,7 @@
     <img src="https://i.ibb.co/2K8gd43/Untitled-1-modified.png" alt="Bums Logo" width="100" height="100">
   </a>
 
-<h3 align="center">Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a> 1.5</h3>
+<h3 align="center">Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a> 2.0</h3>
   <p align="center">
     Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a> Farming Script
     <br />
@@ -108,6 +108,10 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 | **API_ID / API_HASH**       | API Keys of telegram. Use to manage accounts, tutorial: ([#obtain-telegram-api](#obtain-telegram-api)) |
 | **SUPPORT_AUTHOR**          |                Add random choice between `REF_KEY` & AUTHOR `REF_KEY` (default - True)                 |
 | **REF_KEY**                 |                  Start with refer, ID which is after `startapp=` (eg. `ref_3CcrQyaN`)                  |
+| **AUTO_SIGN_IN**            |                                  Auto Check-in Daily (default - True)                                  |
+| **AUTO_OPEN_FREE_BOX**      |                               Auto Open daily free box (default - True)                                |
+| **AUTO_SPINS**              |                                Auto Spin slot machine (default - True)                                 |
+| **SPIN_COUNT**              |                      [Spin] Count of spin per time [1/2/3/5/10/50] (default - 50)                      |
 | **NIGHT_MODE**              |                           Script will sleep on Night hours (default - False)                           |
 | **NIGHT_TIME**              |              [Night Mode]: Hours of sleep on UTC Timezone [start, end] (default - [0, 7])              |
 | **NIGHT_CHECKING**          |       [Night Mode]: Delay (in seconds) to check if night hours are over (default - [3600, 7200])       |

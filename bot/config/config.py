@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     GANG_USERNAME: str = 'mainecode'
     
     SOLVE_COMBO: bool = True
+    
+    AUTO_SIGN_IN: bool = True
+    AUTO_OPEN_FREE_BOX: bool = True
+    
+    AUTO_SPINS: bool = True
+    SPIN_COUNT: int = 50
 
     SLEEP_TIME: list[int] = [2700, 4200]
     START_DELAY: list[int] = [5, 100]
@@ -54,3 +60,6 @@ if settings.API_ID == 1234:
 
 if settings.API_HASH == 'abcd':
     sys.exit(logger.info("Please edit API_HASH from .env file to continue."))
+    
+if settings.AUTO_SPINS == True and settings.SPIN_COUNT not in [1, 2, 3, 5, 10, 50]:
+    sys.exit(logger.info("Make sure SPIN_COUNT should be: 1/2/3/5/10/50."))
