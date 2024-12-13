@@ -6,6 +6,7 @@ from better_proxy import Proxy
 from bot.utils import logger
 from bot.core.tapper import run_tapper
 from bot.core.registrator import register_sessions, get_tg_client
+from bot.utils import build_check
 from bot.utils.accounts import Accounts
 from bot.utils.firstrun import load_session_names
 
@@ -58,6 +59,7 @@ async def process() -> None:
         await run_tasks(accounts=accounts, used_session_names=used_session_names)
 
 async def run_tasks(accounts, used_session_names: str):
+    await build_check.check_base_url()
     tasks = []
     for account in accounts:
         session_name, user_agent, raw_proxy = account.values()
@@ -65,6 +67,7 @@ async def run_tasks(accounts, used_session_names: str):
         tg_client = await get_tg_client(session_name=session_name, proxy=raw_proxy)
         proxy = get_proxy(raw_proxy=raw_proxy)
         tasks.append(asyncio.create_task(run_tapper(tg_client=tg_client, user_agent=user_agent, proxy=proxy, first_run=first_run)))
+        tasks.append(asyncio.create_task(build_check.check_bot_update_loop(2000)))
         await asyncio.sleep(randint(5, 20))
 
     await asyncio.gather(*tasks)

@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     
     REF_KEY: str = 'ref_3CcrQyaN' #KEY AFTER 'startapp=' from invite link
     IN_USE_SESSIONS_PATH: str = 'bot/config/used_sessions.txt'
+    
+    TRACK_BOT_UPDATES: bool = True
+    
     NIGHT_MODE: bool = False
     NIGHT_TIME: list[int] = [0, 7] #TIMEZONE = UTC, FORMAT = HOURS, [start, end]
     NIGHT_CHECKING: list[int] = [3600, 7200]

@@ -61,6 +61,7 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 - Custom Binding on pyrogram session
   - Proxy Binding
   - User-Agent Binding
+- Safe Mode
 - Auto Login
 - Auto Days Sign-In
 - Auto collect Offline Bonus
@@ -73,6 +74,9 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 - Auto Collect Referred Balance
 - Auto Join Gang
 - Auto Solve Combo
+- Auto Open Box
+  - Free Box
+- Auto Spins Lottery
 - Night-Mode Sleep
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -108,6 +112,7 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 | **API_ID / API_HASH**       | API Keys of telegram. Use to manage accounts, tutorial: ([#obtain-telegram-api](#obtain-telegram-api)) |
 | **SUPPORT_AUTHOR**          |                Add random choice between `REF_KEY` & AUTHOR `REF_KEY` (default - True)                 |
 | **REF_KEY**                 |                  Start with refer, ID which is after `startapp=` (eg. `ref_3CcrQyaN`)                  |
+| **TRACK_BOT_UPDATES**       |               Track Bot JS Update, Prevent from API Changed [Safe Mode] (default - True)               |
 | **AUTO_SIGN_IN**            |                                  Auto Check-in Daily (default - True)                                  |
 | **AUTO_OPEN_FREE_BOX**      |                               Auto Open daily free box (default - True)                                |
 | **AUTO_SPINS**              |                                Auto Spin slot machine (default - True)                                 |
