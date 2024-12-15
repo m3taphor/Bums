@@ -121,6 +121,11 @@ async def get_profit_card(cards):
 
 
 def fnum(number):
+    try:
+        number = float(number)
+    except ValueError:
+        return number
+    
     return (
         f"{number / 1e9:.1f}B" if number >= 1e9 else
         f"{number / 1e6:.1f}M" if number >= 1e6 else
