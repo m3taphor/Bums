@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     
     AUTO_UPGRADE_MINE_CARDS: bool = True
     MAX_CARD_PRICE_PURCHASE: int = 10000
+    PROFIT_UPGRADE: bool = True
     
     AUTO_TAP: bool = True
     TAPS_PER_BATCH: list[int] = [15, 30]
@@ -48,6 +49,10 @@ class Settings(BaseSettings):
     IN_USE_SESSIONS_PATH: str = 'bot/config/used_sessions.txt'
     
     TRACK_BOT_UPDATES: bool = True
+    
+    MAX_REQUEST_RETRY: int = 3
+    
+    SAVE_RESPONSE_DATA: bool = False
     
     NIGHT_MODE: bool = False
     NIGHT_TIME: list[int] = [0, 7] #TIMEZONE = UTC, FORMAT = HOURS, [start, end]

@@ -107,40 +107,41 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 
 ### Env Management
 
-| Settings                    |                                          Description (Usage)                                           |
-| --------------------------- | :----------------------------------------------------------------------------------------------------: |
-| **API_ID / API_HASH**       | API Keys of telegram. Use to manage accounts, tutorial: ([#obtain-telegram-api](#obtain-telegram-api)) |
-| **SUPPORT_AUTHOR**          |                Add random choice between `REF_KEY` & AUTHOR `REF_KEY` (default - True)                 |
-| **REF_KEY**                 |                  Start with refer, ID which is after `startapp=` (eg. `ref_3CcrQyaN`)                  |
-| **TRACK_BOT_UPDATES**       |               Track Bot JS Update, Prevent from API Changed [Safe Mode] (default - True)               |
-| **AUTO_SIGN_IN**            |                                  Auto Check-in Daily (default - True)                                  |
-| **AUTO_OPEN_FREE_BOX**      |                               Auto Open daily free box (default - True)                                |
-| **AUTO_SPINS**              |                                Auto Spin slot machine (default - True)                                 |
-| **SPIN_COUNT**              |                      [Spin] Count of spin per time [1/2/3/5/10/50] (default - 50)                      |
-| **NIGHT_MODE**              |                           Script will sleep on Night hours (default - False)                           |
-| **NIGHT_TIME**              |              [Night Mode]: Hours of sleep on UTC Timezone [start, end] (default - [0, 7])              |
-| **NIGHT_CHECKING**          |       [Night Mode]: Delay (in seconds) to check if night hours are over (default - [3600, 7200])       |
-| **AUTO_UPGRADE_TAP_CARDS**  |                    Auto upgrade Tap Cards, increase profit faster (default - True)                     |
-| **JACKPOT_LEVEL**           |             [Tap Card]: Maximum level for upgrading the _Jackpot level_ card (default - 9)             |
-| **CRIT_LEVEL**              |            [Tap Card]: Maximum level for upgrading the _Crit Multiplier_ card (default - 8)            |
-| **ENERGY_LEVEL**            |              [Tap Card]: Maximum level for upgrading the _Max Energy_ card (default - 12)              |
-| **TAP_LEVEL**               |              [Tap Card]: Maximum level for upgrading the _Tap Reward_ card (default - 12)              |
-| **ENERGY_REGEN_LEVEL**      |             [Tap Card]: Maximum level for upgrading the _Energy Regen_ card (default - 10)             |
-| **AUTO_UPGRADE_MINE_CARDS** |                   Auto upgrade Mine Cards, increase profit per hour (default - True)                   |
-| **MAX_CARD_PRICE_PURCHASE** |             [Mine Card]: Maximum amount of card purchase on _Mine_ cards (default - 10000)             |
-| **AUTO_TAP**                |                            Auto Tap/Click to collect coin (default - True)                             |
-| **TAPS_PER_BATCH**          |                        [Auto Tap]: How many taps per batch (default - [15, 30])                        |
-| **DELAY_BETWEEN_TAPS**      |             [Auto Tap]: Delay (in seconds) between per batch of taps (default - [10, 20])              |
-| **AUTO_TASK**               |                                  Auto complete tasks (default - True)                                  |
-| **AUTO_JOIN_CHANNELS**      |                     Auto join telegram channels to complete task (default - True)                      |
-| **AUTO_NAME_CHANGE**        |                   Auto update name (on last name) to complete task (default - False)                   |
-| **COLLECT_REFER_BALANCE**   |                             Auto collect referred balance (default - True)                             |
-| **JOIN_GANG**               |                                Auto Join Gang (Squad) (default - True)                                 |
-| **GANG_USERNAME**           |                        [Join Gang]: Username of gang to join (eg. `mainecode`)                         |
-| **SOLVE_COMBO**             |            Solve daily combo (lottery) by proving answer on `combo.json` (default - False)             |
-| **SLEEP_TIME**              |           Sleep delay (in seconds) before restarting session again (default - [2700, 4200])            |
-| **START_DELAY**             |                        Delay (in seconds) to start process (default - [5, 100])                        |
-| **IN_USE_SESSIONS_PATH**    |       Path of text file for appending in-use session (default - 'bot/config/used_sessions.txt')        |
+| Settings                    |                                           Description (Usage)                                           |
+| --------------------------- | :-----------------------------------------------------------------------------------------------------: |
+| **API_ID / API_HASH**       | API Keys of telegram. Use to manage accounts, tutorial: ([#obtain-telegram-api](#obtain-telegram-api))  |
+| **SUPPORT_AUTHOR**          |                 Add random choice between `REF_KEY` & AUTHOR `REF_KEY` (default - True)                 |
+| **REF_KEY**                 |                  Start with refer, ID which is after `startapp=` (eg. `ref_3CcrQyaN`)                   |
+| **TRACK_BOT_UPDATES**       |               Track Bot JS Update, Prevent from API Changed [Safe Mode] (default - True)                |
+| **AUTO_SIGN_IN**            |                                  Auto Check-in Daily (default - True)                                   |
+| **AUTO_OPEN_FREE_BOX**      |                                Auto Open daily free box (default - True)                                |
+| **AUTO_SPINS**              |                                 Auto Spin slot machine (default - True)                                 |
+| **SPIN_COUNT**              |                      [Spin] Count of spin per time [1/2/3/5/10/50] (default - 50)                       |
+| **NIGHT_MODE**              |                           Script will sleep on Night hours (default - False)                            |
+| **NIGHT_TIME**              |              [Night Mode]: Hours of sleep on UTC Timezone [start, end] (default - [0, 7])               |
+| **NIGHT_CHECKING**          |       [Night Mode]: Delay (in seconds) to check if night hours are over (default - [3600, 7200])        |
+| **AUTO_UPGRADE_TAP_CARDS**  |                     Auto upgrade Tap Cards, increase profit faster (default - True)                     |
+| **JACKPOT_LEVEL**           |             [Tap Card]: Maximum level for upgrading the _Jackpot level_ card (default - 9)              |
+| **CRIT_LEVEL**              |            [Tap Card]: Maximum level for upgrading the _Crit Multiplier_ card (default - 8)             |
+| **ENERGY_LEVEL**            |              [Tap Card]: Maximum level for upgrading the _Max Energy_ card (default - 12)               |
+| **TAP_LEVEL**               |              [Tap Card]: Maximum level for upgrading the _Tap Reward_ card (default - 12)               |
+| **ENERGY_REGEN_LEVEL**      |             [Tap Card]: Maximum level for upgrading the _Energy Regen_ card (default - 10)              |
+| **AUTO_UPGRADE_MINE_CARDS** |                   Auto upgrade Mine Cards, increase profit per hour (default - True)                    |
+| **MAX_CARD_PRICE_PURCHASE** |             [Mine Card]: Maximum amount of card purchase on _Mine_ cards (default - 10000)              |
+| **PROFIT_UPGRADE**          | [Mine Card]: Increase profit/hour & coin ratio of _Mine_ cards. Avoid random purchase. (default - True) |
+| **AUTO_TAP**                |                             Auto Tap/Click to collect coin (default - True)                             |
+| **TAPS_PER_BATCH**          |                        [Auto Tap]: How many taps per batch (default - [15, 30])                         |
+| **DELAY_BETWEEN_TAPS**      |              [Auto Tap]: Delay (in seconds) between per batch of taps (default - [10, 20])              |
+| **AUTO_TASK**               |                                  Auto complete tasks (default - True)                                   |
+| **AUTO_JOIN_CHANNELS**      |                      Auto join telegram channels to complete task (default - True)                      |
+| **AUTO_NAME_CHANGE**        |                   Auto update name (on last name) to complete task (default - False)                    |
+| **COLLECT_REFER_BALANCE**   |                             Auto collect referred balance (default - True)                              |
+| **JOIN_GANG**               |                                 Auto Join Gang (Squad) (default - True)                                 |
+| **GANG_USERNAME**           |                         [Join Gang]: Username of gang to join (eg. `mainecode`)                         |
+| **SOLVE_COMBO**             |             Solve daily combo (lottery) by proving answer on `combo.json` (default - False)             |
+| **SLEEP_TIME**              |            Sleep delay (in seconds) before restarting session again (default - [2700, 4200])            |
+| **START_DELAY**             |                        Delay (in seconds) to start process (default - [5, 100])                         |
+| **IN_USE_SESSIONS_PATH**    |        Path of text file for appending in-use session (default - 'bot/config/used_sessions.txt')        |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

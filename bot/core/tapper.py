@@ -1,6 +1,5 @@
 import asyncio
 import traceback
-import base64
 import json
 import shutil
 import os
@@ -33,11 +32,9 @@ from bot.utils import logger
 from bot.exceptions import TelegramInvalidSessionException, TelegramProxyError
 from .headers import headers
 
-from random import randint, choices
+from random import randint
 
-from bot.utils.functions import card_details, tapHash, generate_taps, task_answer, combo_answer, count_spin
-
-from ..utils.firstrun import append_line_to_file
+from bot.utils.functions import card_details, tapHash, generate_taps, task_answer, combo_answer, count_spin, get_profit_card, fnum
 
 def error_handler(func: Callable):
     @functools.wraps(func)
@@ -134,13 +131,10 @@ class Tapper:
             await self.tg_client.connect()
     
         try:
-            # Parse the link
             parsed_link = link if 'https://t.me/+' in link else link[13:]
             
-            # Retrieve chat details
             chat = await self.tg_client.get_chat(parsed_link)
             
-            # Determine username or ID
             if chat.username:
                 chat_username = chat.username
             elif chat.id:
@@ -263,24 +257,80 @@ class Tapper:
         elif urlencoded_data is not None:
             request_headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
             kwargs["data"] = aiohttp.FormData(urlencoded_data)
-
-        try:
-            response = await http_client.request(method, full_url, headers=request_headers, **kwargs)
-            response.raise_for_status()
-            
-            response_text = await response.text()
-            
-            # with open("log.txt", "a") as log_file:
-            #     log_file.write(f"- URL : {full_url}\n")
-            #     if method =='POST':
-            #         log_file.write(f"- Post Data : {kwargs.get('data', None)}\n\n")
-            #     log_file.write(f"- Response {response.status} : {response_text}\n")
-            #     log_file.write(f"\n=======================================================\n")
+        
+        retries = 0
+        max_retries = settings.MAX_REQUEST_RETRY
+        
+        while retries < max_retries:
+            try:
+                response = await http_client.request(method, full_url, headers=request_headers, **kwargs)
+                response.raise_for_status()
                 
-            return await response.json()
-        except (aiohttp.ClientResponseError, aiohttp.ClientError, Exception) as error:
-            logger.error(f"{self.session_name} | Unknown error when processing request: {error}")
-            raise
+                if settings.SAVE_RESPONSE_DATA:
+                    response_data = ""
+                    response_data += f"Timestamp: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                    response_data += f"Request URL: {full_url}\n"
+
+                    if method == 'POST':
+                        request_body = kwargs.get('json', None)
+                        if request_body is not None:
+                            response_data += f"Request Body (JSON): {json.dumps(request_body, indent=2)}\n\n"
+                        else:
+                            request_body = kwargs.get('data', None)
+                            if request_body is not None:
+                                response_data += f"Request Body (Data): {request_body}\n\n"
+
+                    response_data += f"Response Code: {response.status}\n"
+                    response_data += f"Response Headers: {dict(response.headers)}\n"
+                    response_data += f"Response Body: {await response.text()}\n"
+                    response_data += "-" * 50 + "\n"
+                    
+                    with open("saved_data.txt", "a", encoding='utf8') as file:
+                        file.write(response_data)
+                        
+                return await response.json()
+            except aiohttp.ClientResponseError as error:
+                
+                if settings.SAVE_RESPONSE_DATA:
+                    response_data = ""
+                    response_data += f"Timestamp: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                    response_data += f"Request URL: {full_url}\n"
+
+                    if method == 'POST':
+                        request_body = kwargs.get('json', None)
+                        if request_body is not None:
+                            response_data += f"Request Body (JSON): {json.dumps(request_body, indent=2)}\n\n"
+                        else:
+                            request_body = kwargs.get('data', None)
+                            if request_body is not None:
+                                response_data += f"Request Body (Data): {request_body}\n\n"
+
+                    response_data += f"Response Code: {error.status}\n"
+                    response_data += f"Response Headers: {dict(error.headers)}\n"
+                    response_data += f"Response Message: {await error.message}\n"
+                    response_data += "-" * 50 + "\n"
+                    
+                    with open("saved_data.txt", "a", encoding='utf8') as file:
+                        file.write(response_data)
+                        
+                if error.status == 503 or error.status == 500:
+                    retries += 1
+                    logger.warning(f"{self.session_name} | Received <r>{error.status}</r>, retrying {retries}/{max_retries}...")
+                    await asyncio.sleep(2 ** retries)
+                    continue
+                else:
+                    logger.error(f"{self.session_name} | HTTP error: {error}")
+                    raise
+            except (aiohttp.ClientError, Exception) as error:
+                logger.error(f"{self.session_name} | Unknown error when processing request: {error}")
+                raise
+        logger.error(f"{self.session_name} | Max retries reached for 'Server Un-Reachable' error.")
+        raise aiohttp.ClientResponseError(
+            request_info=None,
+            history=None,
+            status=503,
+            message="Max retries reached for 503 errors."
+        )
         
     @error_handler
     async def login(self, http_client: aiohttp.ClientSession, ref_id, init_data):
@@ -331,10 +381,21 @@ class Tapper:
         web_boundary = {
             "mineId": mineId
         }
-
-        response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/mine/upgrade", extra_headers=additional_headers, web_boundary=web_boundary)
-        if response.get('code') == 0 and response.get('msg') == 'OK':
-            return response
+        
+        retries = 0
+        while retries < 10:
+            response = await self.make_request(http_client, 'POST', endpoint="/miniapps/api/mine/upgrade", extra_headers=additional_headers, web_boundary=web_boundary)
+            
+            if response.get('code') == -1 and response.get('msg') == 'Insufficient balance':
+                retries += 1
+                continue
+            
+            if response.get('code') == 0 and response.get('msg') == 'OK':
+                return response
+            
+            logger.error(f"{self.session_name} | Error in upgrading... Retrying ({retries}/10)")
+            await asyncio.sleep(random.randint(5, 10))
+            
         return None
     
     @error_handler
@@ -594,15 +655,16 @@ class Tapper:
                         await asyncio.sleep(delay=sleep_time)
                         break
                     
-                    balance_coin = user_data['data']['gameInfo'].get('coin') or 0
+                    coin = int(user_data['data']['gameInfo'].get('coin')) or 0
+                    
                     current_level = user_data['data']['gameInfo'].get('level') or 0
                     profit_hour = user_data['data']['mineInfo'].get('minePower') or 0
                     offline_bonus = int(user_data['data']['mineInfo'].get('mineOfflineCoin'))
                     
-                    logger.info(f"{self.session_name} | Balance : <y>{balance_coin}</y> | Level : <y>{current_level}</y> | Profit Per Hour : <y>{profit_hour}</y>")
+                    logger.info(f"{self.session_name} | Balance : <y>{fnum(coin)}</y> | Level : <y>{current_level}</y> | Profit Per Hour : <y>{fnum(profit_hour)}</y>")
                     
                     if offline_bonus > 0:
-                        logger.success(f"{self.session_name} | Collected Offline Bonus: <g>+{offline_bonus}</g>")
+                        logger.success(f"{self.session_name} | Collected Offline Bonus: <g>+{fnum(offline_bonus)}</g>")
                         
                     await asyncio.sleep(random.randint(1, 3))
                     
@@ -625,7 +687,7 @@ class Tapper:
                                     current_day = item["daysDesc"]
                                     make_signin = await self.sign_in(http_client, auth_token=auth_token)
                                     if make_signin:
-                                        logger.success(f"{self.session_name} | Successful Sign-In <y>{current_day}</y>: <g>+{day_reward}</g>")
+                                        logger.success(f"{self.session_name} | Successful Sign-In <y>{current_day}</y>: <g>+{fnum(day_reward)}</g>")
                                     continue
                                 
                         await asyncio.sleep(random.randint(1, 3))
@@ -691,7 +753,7 @@ class Tapper:
                     # Auto Tap
                     if settings.AUTO_TAP:
                         tapData = await self.get_tap_info(http_client, auth_token=auth_token)
-                        balance_coin = tapData['balance']
+                        coin = tapData['balance']
                         tap_value = tapData['tap']
                         today_coin_limit = tapData['todayCoinLimit']
                         today_tap_done = tapData['todayCoin']
@@ -726,7 +788,7 @@ class Tapper:
                                     energy_left = tapData['leftEnergy']
                                     today_tap_done = tapData['todayCoin']
                                     collect_seq = tapData['collectSeqNo']
-                                    logger.success(f"{self.session_name} | Tapped <y>x{total_taps}</y>: <g>+{taps_amount}</g> | Balance: <y>{post_taps['data'].get('coin')}</y> | Energy: <y>({energy_left}/{total_energy})</y>")
+                                    logger.success(f"{self.session_name} | Tapped <y>x{total_taps}</y>: <g>+{fnum(taps_amount)}</g> | Balance: <y>{fnum(post_taps['data'].get('coin'))}</y> | Energy: <y>({energy_left}/{total_energy})</y>")
                                     await asyncio.sleep(random.randint(settings.DELAY_BETWEEN_TAPS[0], settings.DELAY_BETWEEN_TAPS[1]))
                                 else:
                                     logger.error(f"{self.session_name} | Unknown error while tapping, Skipping taps!")
@@ -789,7 +851,7 @@ class Tapper:
                                     await asyncio.sleep(random.randint(5, 10))
                                     data_done = await self.done_task(http_client, auth_token=auth_token, task_id=task_id)
                                     if data_done:
-                                        logger.success(f"{self.session_name} | Task: <y>{task_name}</y> | Reward: <y>+{task_reward}</y>")
+                                        logger.success(f"{self.session_name} | Task: <y>{task_name}</y> | Reward: <y>+{fnum(task_reward)}</y>")
                                 continue
 
                             if task_classify.lower() == "youtube" and task_type == "pwd":
@@ -797,14 +859,16 @@ class Tapper:
                                 if utube_code:
                                     utube_done = await self.done_task(http_client, auth_token=auth_token, task_id=task_id, pwd=utube_code)
                                     if utube_done:
-                                        logger.success(f"{self.session_name} | Task: <y>{task_name}</y> | Reward: <y>+{task_reward}</y>")
+                                        logger.success(f"{self.session_name} | Task: <y>{task_name}</y> | Reward: <y>+{fnum(task_reward)}</y>")
                                 continue
                             
                             data_done = await self.done_task(http_client, auth_token=auth_token, task_id=task_id)
                             if data_done:
-                                logger.success(f"{self.session_name} | Task: <y>{task_name}</y> | Reward: <y>+{task_reward}</y>")
+                                logger.success(f"{self.session_name} | Task: <y>{task_name}</y> | Reward: <y>+{fnum(task_reward)}</y>")
                 
                         await asyncio.sleep(random.randint(1, 5))
+                        
+                    await asyncio.sleep(random.randint(1, 3))
                     
                     # Update Tap-Cards
                     if settings.AUTO_UPGRADE_TAP_CARDS:
@@ -825,7 +889,7 @@ class Tapper:
                                 await asyncio.sleep(delay=sleep_time)
                                 continue
                             
-                            balance_coin = int(user_data['data']['gameInfo'].get('coin') or 0)
+                            coin = int(user_data['data']['gameInfo'].get('coin') or 0)
                             profit_hour = int(user_data['data']['mineInfo'].get('minePower')  or 0)
                             current_level = user_data['data']['gameInfo'].get('level') or 0
                             tap_info = user_data['data']['tapInfo']
@@ -836,97 +900,102 @@ class Tapper:
                                 price = int(tap_info[card_type].get('nextCostCoin'))
                                 max_level = data["max_level"]
 
-                                if level < max_level and balance_coin >= price:
+                                if level < max_level and coin >= price:
                                     upgrade_tap = await self.upgrade_tap(http_client, auth_token=auth_token, card_type=card_type)
                                     if upgrade_tap:
                                         card_name = card_details(card_type)
-                                        logger.success(f"{self.session_name} | '{card_name[0]}' upgraded: <e>{level + 1}</e>, <r>-{price}</r>")
+                                        logger.success(f"{self.session_name} | '{card_name[0]}' upgraded: <e>{level + 1}</e>, <r>-{fnum(price)}</r>")
                                         upgrade_made = True
                                     break
                                 
-                                await asyncio.sleep(random.randint(2, 5))
+                                await asyncio.sleep(random.randint(3, 10))
                                 
                             if not upgrade_made:
                                 all_upgraded = all(int(tap_info[card]["level"]) >= upgrades[card]["max_level"] for card in upgrades)
                                 if all_upgraded:
                                     logger.success(f"{self.session_name} | All Tap-Cards upgraded!")
-                                    logger.info(f"{self.session_name} | Updated Balance: <y>{balance_coin}</y> | Updated Level: <y>{current_level}</y>")
+                                    logger.info(f"{self.session_name} | Updated Balance: <y>{fnum(coin)}</y> | Updated Level: <y>{current_level}</y>")
                                 else:
                                     logger.info(f"{self.session_name} | Insufficient Balance to keep upgrading.")
-                                    logger.info(f"{self.session_name} | Updated Balance: <y>{balance_coin}</y> | Updated Level: <y>{current_level}</y>")
+                                    logger.info(f"{self.session_name} | Updated Balance: <y>{fnum(coin)}</y> | Updated Level: <y>{current_level}</y>")
                                 break
                             
-                        await asyncio.sleep(random.randint(1, 5))
+                        await asyncio.sleep(random.randint(1, 3))
 
                     # Update Mine-Cards
                     if settings.AUTO_UPGRADE_MINE_CARDS:
                         logger.info(f"{self.session_name} | Updating Mine-Cards...")
-
                         while True:
-                            user_data = await self.user_data(http_client, auth_token=auth_token)
-                            if not user_data:
-                                logger.error(f"{self.session_name} | Unknown error while collecting User Data!")
-                                logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
-                                await asyncio.sleep(delay=sleep_time)
-                                continue
-                            
-                            balance_coin = int(user_data['data']['gameInfo'].get('coin') or 0)
-                            current_level = user_data['data']['gameInfo'].get('level') or 0
-                            profit_hour = user_data['data']['mineInfo'].get('minePower') or 0
-                            
-                            await asyncio.sleep(random.randint(1, 3))
-
                             mine_data = await self.get_tap_cards(http_client, auth_token=auth_token)
                             if not mine_data:
                                 logger.error(f"{self.session_name} | Unknown error while collecting Mine List!")
                                 logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
                                 await asyncio.sleep(delay=sleep_time)
                                 continue
-                            
+
                             mine_list = mine_data['data']['lists']
 
-                            upgradeable_mines = [
-                                mine for mine in mine_list
-                                if int(mine['nextLevelCost']) <= settings.MAX_CARD_PRICE_PURCHASE and mine['status'] == 1
-                            ]
-
-                            if not upgradeable_mines:
-                                logger.success(f"{self.session_name} | All Tap-Cards upgraded!")
-                                break
-                            
-                            upgrade_possible = False
-                            for mine in upgradeable_mines:
-                                nextLevelCost = int(mine['nextLevelCost'])
-
-                                user_data = await self.user_data(http_client, auth_token=auth_token)
-                                if not user_data:
-                                    logger.error(f"{self.session_name} | Unknown error while collecting User Data!")
-                                    break
-                                
-                                balance_coin = int(user_data['data']['gameInfo'].get('coin') or 0)
-                                current_level = user_data['data']['gameInfo'].get('level') or 0
-                                profit_hour = user_data['data']['mineInfo'].get('minePower') or 0
-
-                                if balance_coin >= nextLevelCost:
-                                    mineId = mine['mineId']
-                                    mine_level = int(mine['level'])
-                                    mine_card = card_details(mineId)
-                                    if await self.upgrade_mine(http_client, auth_token=auth_token, mineId=mineId):
-                                        logger.success(f"{self.session_name} | '{mine_card[0]}' upgraded: <e>{mine_level + 1}</e>, <r>-{nextLevelCost}</r>")
-                                        upgrade_possible = True
-                                    await asyncio.sleep(random.randint(1, 3))
-                                else:
-                                    break 
-                                
-                            if upgrade_possible:
+                            user_data = await self.user_data(http_client, auth_token=auth_token)
+                            if not user_data:
+                                logger.error(f"{self.session_name} | Unknown error while collecting User Data!")
+                                logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
+                                await asyncio.sleep(delay=sleep_time)
                                 continue
+
+                            coin = int(user_data['data']['gameInfo'].get('coin') or 0)
+                            current_level = user_data['data']['gameInfo'].get('level') or 0
+                            profit_hour = user_data['data']['mineInfo'].get('minePower') or 0
+
+                            upgrades_done = False
+
+                            if settings.PROFIT_UPGRADE:
+                                allowed_cards = []
+                                for mine in mine_list:
+                                    next_level_cost = int(mine['nextLevelCost'])
+                                    status = int(mine['status'])
+                                    mine_id = int(mine['mineId'])
+
+                                    if next_level_cost <= coin and next_level_cost <= settings.MAX_CARD_PRICE_PURCHASE and status == 1:
+                                        allowed_cards.append(mine)
+                                if allowed_cards:
+                                    profit_card = await get_profit_card(cards=allowed_cards)
+                                    if profit_card:
+                                        mine_id = profit_card["mineId"]
+                                        next_level_cost = profit_card["nextLevelCost"]
+                                        mine_level = int(profit_card['level'])
+                                        
+                                        mine_card = card_details(mine_id)
+                                        
+                                        upgrade_card = await self.upgrade_mine(http_client, auth_token=auth_token, mineId=mine_id)
+                                        
+                                        if upgrade_card:
+                                            logger.success(f"{self.session_name} | '{mine_card[0]}' upgraded: <e>{mine_level + 1}</e>, <r>-{fnum(next_level_cost)}</r>")
+                                            upgrades_done = True
+
                             else:
+                                for mine in mine_list:
+                                    next_level_cost = int(mine['nextLevelCost'])
+                                    status = int(mine['status'])
+                                    mine_id = int(mine['mineId'])
+                                    mine_level = int(mine['level'])
+                                    
+                                    mine_card = card_details(mine_id)
+                                    if next_level_cost <= coin and next_level_cost <= settings.MAX_CARD_PRICE_PURCHASE and status == 1:
+                                        upgrade_card = await self.upgrade_mine(http_client, auth_token=auth_token, mineId=mine_id)
+                                        
+                                        if upgrade_card:
+                                            logger.success(f"{self.session_name} | '{mine_card[0]}' upgraded: <e>{mine_level + 1}</e>, <r>-{fnum(next_level_cost)}</r>")
+                                            upgrades_done = True
+
+                            if not upgrades_done:
                                 logger.info(f"{self.session_name} | No more upgrades possible. Stopping process.")
-                                logger.info(f"{self.session_name} | Updated Balance: <y>{balance_coin}</y> | Updated Level: <y>{current_level}</y> | Updated Profit/Hour: <y>{profit_hour}</y>")
+                                logger.info(f"{self.session_name} | Updated Balance: <y>{fnum(coin)}</y> | Updated Level: <y>{current_level}</y> | Updated Profit/Hour: <y>{fnum(profit_hour)}</y>")
                                 break
-                            
+
+                            await asyncio.sleep(random.randint(3, 10))
+
                         await asyncio.sleep(random.randint(1, 3))
-                    
+
                     # Join Gang
                     if settings.JOIN_GANG:
                         gang_list = await self.get_gang_list(http_client, auth_token=auth_token)
@@ -1001,7 +1070,8 @@ class Tapper:
                         total_spins = int(spin_info.get('data', {}).get('staminaNow')) or 0
                         max_spins = spin_info.get('data', {}).get('staminaMax') or 'NaN'
                         
-                        logger.info(f"{self.session_name} | Total Spins: <y>({total_spins}/{max_spins})</y>, Spinning...")
+                        if total_spins > 0:
+                            logger.info(f"{self.session_name} | Total Spins: <y>({total_spins}/{max_spins})</y>, Spinning...")
                         
                         while total_spins > 0:
                             if spin_count > total_spins:
