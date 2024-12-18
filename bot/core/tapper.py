@@ -51,12 +51,7 @@ class Tapper:
         self.tg_client = tg_client
         self.first_run = first_run
         self.session_name = tg_client.name
-        self.start_param = ''
         self.main_bot_peer = 'bums'
-        self.joined = None
-        self.balance = 0
-        self.template_to_join = 0
-        self.user_id = 0
 
     async def get_tg_web_data(self, proxy: str | None) -> str:
         if proxy:
