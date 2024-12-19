@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     REF_KEY: str = 'ref_3CcrQyaN' #KEY AFTER 'startapp=' from invite link
     IN_USE_SESSIONS_PATH: str = 'bot/config/used_sessions.txt'
     
-    TRACK_BOT_UPDATES: bool = True
+    TRACK_BOT_UPDATES: bool = False
     
     MAX_REQUEST_RETRY: int = 3
     

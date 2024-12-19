@@ -656,10 +656,10 @@ class Tapper:
                     profit_hour = user_data['data']['mineInfo'].get('minePower') or 0
                     offline_bonus = int(user_data['data']['mineInfo'].get('mineOfflineCoin'))
                     
-                    logger.info(f"{self.session_name} | Balance : <y>{fnum(coin)}</y> | Level : <y>{current_level}</y> | Profit Per Hour : <y>{fnum(profit_hour)}</y>")
+                    logger.info(f"{self.session_name} | Balance: <y>{fnum(coin - offline_bonus)}</y> | Level: <y>{current_level}</y> | Profit Per Hour: <y>{fnum(profit_hour)}</y>")
                     
                     if offline_bonus > 0:
-                        logger.success(f"{self.session_name} | Collected Offline Bonus: <g>+{fnum(offline_bonus)}</g>")
+                        logger.success(f"{self.session_name} | Offline Bonus: <g>+{fnum(offline_bonus)}</g> | Updated Balance: <y>{fnum(coin)}</y>")
                         
                     await asyncio.sleep(random.randint(1, 3))
                     
