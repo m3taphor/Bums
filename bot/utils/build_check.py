@@ -22,7 +22,7 @@ async def get_main_js_format(base_url):
         response.raise_for_status()
         try:
             content = await response.text()
-            matches = [match.replace('./', '/') for match in re.findall(r'src="(./.*?index-[a-zA-Z0-9_]+.js)"', content)]
+            matches = [match.replace('./', '/') for match in re.findall(r'src="(./.*?index-[a-zA-Z0-9_-]{1,10}.js)"', content)]
             return sorted(set(matches), key=len, reverse=True) if matches else None
         except Exception as e:
             logger.warning(f"Error fetching the base URL: {e}")

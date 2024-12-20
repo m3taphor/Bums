@@ -12,7 +12,7 @@
     <img src="https://i.ibb.co/2K8gd43/Untitled-1-modified.png" alt="Bums Logo" width="100" height="100">
   </a>
 
-<h3 align="center">Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a> 2.0</h3>
+<h3 align="center">Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a> 2.1</h3>
   <p align="center">
     Auto <a href="https://t.me/bums/app?startapp=ref_3CcrQyaN">@Bums</a> Farming Script
     <br />
@@ -61,7 +61,7 @@ An automated script/code made by @m3taphor on [Python 3.10](https://www.python.o
 - Custom Binding on pyrogram session
   - Proxy Binding
   - User-Agent Binding
-- Safe Mode
+- Track Bot Updates
 - Auto Login
 - Auto Days Sign-In
 - Auto collect Offline Bonus
