@@ -1,4 +1,3 @@
-version: '3'
 services:
   bot:
     container_name: 'Bums'
